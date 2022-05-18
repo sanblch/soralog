@@ -5,9 +5,9 @@
 
 include_directories(SYSTEM
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>
     PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
+        $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/src>
     )
 
 set(INSTALL_TARGETS)
@@ -59,10 +59,6 @@ target_link_libraries(multisink
     sink
     )
 
-add_library(group
-    group.cpp
-    )
-
 add_library(logger
     logger.cpp
     )
@@ -95,6 +91,7 @@ target_link_libraries(fallback_configurator
     )
 
 add_library(logging_system
+    group.cpp
     logging_system.cpp
     )
 target_link_libraries(logging_system
@@ -105,9 +102,11 @@ add_library(soralog soralog.cpp)
 target_link_libraries(soralog
     logging_system
     sink
-    group
     configurator
     logger
+
+    configurator_yaml
+    fallback_configurator
     )
 
 add_library(yaml ALIAS configurator_yaml)
@@ -125,8 +124,6 @@ set(INSTALL_TARGETS
     sink_to_syslog
     multisink
 
-    group
-
     configurator
     fallback_configurator
     configurator_yaml
@@ -140,13 +137,13 @@ set(INSTALL_TARGETS
 include(GNUInstallDirs)
 
 install(
-    DIRECTORY ${CMAKE_SOURCE_DIR}/include/soralog
+    DIRECTORY ${${PROJECT_NAME}_SOURCE_DIR}/include/soralog
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 install(
     TARGETS ${INSTALL_TARGETS}
-    EXPORT soralogConfig
+    EXPORT soralog
     LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}/soralog
     ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR}/soralog
     RUNTIME       DESTINATION ${CMAKE_INSTALL_BINDIR}/soralog
@@ -155,14 +152,21 @@ install(
     FRAMEWORK     DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
 
-install(
-    EXPORT soralogConfig
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/soralog
-    NAMESPACE soralog::
-)
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
+  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+  INSTALL_DESTINATION
+  ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  )
 
-export(
-    EXPORT soralogConfig
-    FILE ${PROJECT_BINARY_DIR}/soralogConfig.cmake
-    NAMESPACE soralog::
-)
+install(EXPORT soralog
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  FILE ${PROJECT_NAME}Targets.cmake
+  NAMESPACE ${PROJECT_NAME}::
+  EXPORT_LINK_INTERFACE_LIBRARIES
+  )
+
+install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  )

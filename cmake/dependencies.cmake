@@ -4,15 +4,20 @@
 #
 
 if (TESTING OR COVERAGE)
-  hunter_add_package(GTest)
+  if(PACMAN STREQUAL "HUNTER")
+    hunter_add_package(GTest)
+  endif()
   find_package(GTest CONFIG REQUIRED)
 endif()
 
-hunter_add_package(yaml-cpp)
+if(PACMAN STREQUAL "HUNTER")
+  hunter_add_package(fmt)
+  hunter_add_package(yaml-cpp)
+endif()
+
 find_package(yaml-cpp CONFIG REQUIRED)
 if (NOT TARGET yaml-cpp::yaml-cpp)
     add_library(yaml-cpp::yaml-cpp ALIAS yaml-cpp)
 endif()
 
-hunter_add_package(fmt)
 find_package(fmt CONFIG REQUIRED)

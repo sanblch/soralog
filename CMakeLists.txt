@@ -11,12 +11,20 @@ set(CMAKE_TOOLCHAIN_FILE
     CACHE FILEPATH "Default toolchain"
     )
 
-include("cmake/Hunter/init.cmake")
-
 cmake_policy(SET CMP0048 NEW)
 project(soralog VERSION 0.0.7 LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+set(PACMAN HUNTER CACHE STRING "Package manager")
+set_property(CACHE PACMAN PROPERTY STRINGS HUNTER CONAN)
+
+if(PACMAN STREQUAL "HUNTER")
+  include("cmake/Hunter/init.cmake")
+elseif(PACMAN STREQUAL "CONAN")
+  list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+  include("cmake/dependencies.cmake")
+endif()
 
 option(TESTING      "Build tests"                                 ON)
 option(EXAMPLES     "Build examples"                              ON)
